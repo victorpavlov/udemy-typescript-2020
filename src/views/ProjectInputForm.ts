@@ -1,3 +1,42 @@
+interface Validatable {
+  value: string | number;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+}
+
+function validate(validatableInput: Validatable) {
+  let isValid = true;
+  const value = validatableInput.value;
+  if (validatableInput.required) {
+    isValid = isValid && value.toString().trim().length !== 0;
+  }
+  if (validatableInput.minLength != null && typeof value === 'string') {
+    isValid = isValid && value.length >= validatableInput.minLength;
+  }
+  if (validatableInput.maxLength != null && typeof value === 'string') {
+    isValid = isValid && value.length <= validatableInput.maxLength;
+  }
+  if (validatableInput.min != null && typeof validatableInput.value === 'number') {
+    isValid = isValid && value >= validatableInput.min;
+  }
+  if (validatableInput.max != null && typeof validatableInput.value === 'number') {
+    isValid = isValid && value <= validatableInput.max;
+  }
+
+  return isValid;
+}
+
+/**
+ * autoBind Decorator
+ *
+ * @param {*} _target
+ * @param {string} _methodName
+ * @param {PropertyDescriptor} descriptor
+ * @returns
+ */
 function autoBind(
   _target: any,
   _methodName: string,
@@ -40,7 +79,28 @@ export default class ProjectInputForm {
     const title = this.titleInputElement.value;
     const description = this.descriptionInputElement.value;
     const people = this.peopleInputElement.value;
-    if (!title.length || !description.length || !people.length ) {
+
+    const validatableTitle: Validatable = {
+      value: title,
+      required: true,
+    };
+    const validatableDescription: Validatable = {
+      value: description,
+      required: true,
+      minLength: 5,
+    };
+    const validatablePeople: Validatable = {
+      value: +people,
+      required: true,
+      min: 1,
+      max: 5,
+    };
+
+    if (
+      !validate(validatableTitle) ||
+      !validate(validatableDescription) ||
+      !validate(validatablePeople)
+    ) {
       alert('Please fill in all fields.');
     } else {
       return [title, description, +people];
